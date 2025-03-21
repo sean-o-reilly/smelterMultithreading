@@ -1,1 +1,2 @@
 # smelterMultithreading
+![](/smelterMultithreading/smelter.jpg)

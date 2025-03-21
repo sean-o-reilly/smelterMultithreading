@@ -3,14 +3,17 @@
 #include <random>
 
 #include <thread>
+#include <mutex>
 //chrono
 
 //!!!!!!!!! Based off tutorial by Ghost The Engineer on youtube
 
-//using multi-threading to represent a minecraft auto furnace in C++
+//using multi-threading to represent a minecraft auto furnace in C++, where each thread represents a furnace (see smelter.jpg)
+//this achieves (ironOre * smeltTime) seconds of smelting time in 1/5 of the time, due to the use of 5 threads instead of 1
 
-
-//FIX run.sh not waiting after execution
+//TODO:
+// - FIX run.sh not waiting after execution
+// - std::atomic
 
 int furnaces = 5;
 int furnaceCapacity = 64;
@@ -23,11 +26,19 @@ int expectedTime = (double)(ironOre * smeltTime) / (double)furnaces; //# of ingo
 //this is the target time^, which has to be achieved with multithreading to simulate multiple furnaces working together to distribute the smelting load
 //is likely to be > than because of cout statements 
 
+std::mutex mtx; //mutual exclusion
+
 void smelt(int furnaceID) {
     for (int i = 0; i < furnaceCapacity; ++i) {
-        std::cout << "  Furnace " << furnaceID << " smelting ingot: " << (ironIngots + 1) << std::endl;
-        ++ironIngots; //this furnace smelted an iron ingot
 
+        //lock global accessing here, so multiple threads dont access the same operations and variables resulting in race condition
+        {
+            std::lock_guard<std::mutex> lock(mtx); //passing mtx in this constructor causes .lock() for us, and handles exceptions
+            std::cout << "  Furnace " << furnaceID << " smelting ingot: " << (ironIngots + 1) << std::endl;
+            ++ironIngots; //this furnace smelted an iron ingot
+        } //scope destructor will destroy the lock, unlocking these operations for access
+
+        //make sure this isn't in the lock!! (causes thread blocking)
         std::this_thread::sleep_for(std::chrono::milliseconds(smeltTime)); //sleep_for() is part of <thread> *for now this is converting 10 seconds to 10 milliseconds
     }
 }
@@ -45,7 +56,7 @@ void printResults(double totalTime) {
 
 int main() {
 
-    std::cout << std::endl << "=====Hello, Multithreading!=====" << std::endl << std::endl;
+    std::cout << std::endl << "=====Smelting=====" << std::endl << std::endl;
 
 
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -56,23 +67,13 @@ int main() {
     std::thread furnace4(smelt, 4);
     std::thread furnace5(smelt, 5);
 
-    //join threads to avoid race condition error
+    //join threads together
     furnace1.join();
     furnace2.join();
     furnace3.join();
     furnace4.join();
     furnace5.join();
     //after joining these threads, execution is already wayy closer to expected
-    //however,  we're still getting a race condition on some runs of main
-    //all 5 furnaces are trying to access ironIngots at once to ++, so we need to sync threads with mutex
-
-
-    //sequential execution
-    // smelt(1);
-    // smelt(2);
-    // smelt(3);
-    // smelt(4);
-    // smelt(5);
 
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = endTime - startTime;
@@ -81,3 +82,17 @@ int main() {
     
     return 0;
 }
+
+//sequential execution examples
+
+    // smelt(1);
+    // smelt(2);
+    // smelt(3);
+    // smelt(4);
+    // smelt(5);
+
+    //or..
+
+    // for (int i = 1; i <= furnaces; ++i) {
+    //     smelt(i);
+    // }
