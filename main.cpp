@@ -3,6 +3,7 @@
 #include <random>
 
 #include <thread>
+//chrono
 
 //using multi-threading to represent a minecraft auto furnace in C++
 
@@ -22,11 +23,30 @@ void smelt(int furnaceID) {
     }
 }
 
+void printResults(double totalTime) {
+    std::cout << "\n\n";
+    std::cout << "=====Results=====" << std::endl;
+    std::cout << "  Furnaces: " << furnaces << std::endl;
+    std::cout << "  Iron Ore Smelted: " << ironIngots << std::endl;
+    std::cout << "  Simulated Time Elapsed (Real Time in Milliseconds): " << std::setprecision(4) << totalTime << " seconds " << std::endl;
+    std::cout << "  Approx. Real Time Elapsed: " << totalTime * 1000.00 << " seconds " << std::endl;
+    std::cout << "  Expected Time Elapsed: " << ironIngots * smeltTime << " seconds " << std::endl;
+
+}
+
 int main() {
 
     std::cout << std::endl << "=====Hello, Multithreading!=====" << std::endl << std::endl;
 
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     smelt(1);
 
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = endTime - startTime;
+
+    printResults(elapsed.count());
+    
     return 0;
 }
