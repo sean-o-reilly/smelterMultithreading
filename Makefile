@@ -11,7 +11,3 @@ run_main: main
 
 clean:
 	rm -f main
-
-# asan:
-# 	clang++ -fsanitize=address -g -o main main.cpp
-# 	./main
