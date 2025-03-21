@@ -5,6 +5,8 @@
 #include <thread>
 //chrono
 
+//!!!!!!!!! Based off tutorial by Ghost The Engineer on youtube
+
 //using multi-threading to represent a minecraft auto furnace in C++
 
 
@@ -19,10 +21,11 @@ int smeltTime = 10; //iron ore takes ten seconds to smelt
 
 int expectedTime = (double)(ironOre * smeltTime) / (double)furnaces; //# of ingots to smelt , * smelt time, evenly distributed over the number of furnaces
 //this is the target time^, which has to be achieved with multithreading to simulate multiple furnaces working together to distribute the smelting load
+//is likely to be > than because of cout statements 
 
 void smelt(int furnaceID) {
     for (int i = 0; i < furnaceCapacity; ++i) {
-        std::cout << "  Furnace " << furnaceID << " smelting ingot " << (ironIngots + 1) << std::endl;
+        std::cout << "  Furnace " << furnaceID << " smelting ingot: " << (ironIngots + 1) << std::endl;
         ++ironIngots; //this furnace smelted an iron ingot
 
         std::this_thread::sleep_for(std::chrono::milliseconds(smeltTime)); //sleep_for() is part of <thread> *for now this is converting 10 seconds to 10 milliseconds
@@ -47,11 +50,29 @@ int main() {
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    smelt(1);
-    smelt(2);
-    smelt(3);
-    smelt(4);
-    smelt(5);
+    std::thread furnace1(smelt, 1); //run the smelt function on a thread
+    std::thread furnace2(smelt, 2);
+    std::thread furnace3(smelt, 3);
+    std::thread furnace4(smelt, 4);
+    std::thread furnace5(smelt, 5);
+
+    //join threads to avoid race condition error
+    furnace1.join();
+    furnace2.join();
+    furnace3.join();
+    furnace4.join();
+    furnace5.join();
+    //after joining these threads, execution is already wayy closer to expected
+    //however,  we're still getting a race condition on some runs of main
+    //all 5 furnaces are trying to access ironIngots at once to ++, so we need to sync threads with mutex
+
+
+    //sequential execution
+    // smelt(1);
+    // smelt(2);
+    // smelt(3);
+    // smelt(4);
+    // smelt(5);
 
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = endTime - startTime;
