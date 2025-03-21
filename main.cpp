@@ -18,7 +18,7 @@ void smelt(int furnaceID) {
         std::cout << "  Furnace " << furnaceID << " smelting ingot " << (ironIngots + 1) << std::endl;
         ++ironIngots; //this furnace smelted an iron ingot
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(smeltTime)); //sleep_for() is part of <thread>
+        std::this_thread::sleep_for(std::chrono::milliseconds(smeltTime)); //sleep_for() is part of <thread> *for now this is converting 10 seconds to 10 milliseconds
     }
 }
 
